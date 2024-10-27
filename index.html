@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Service Token Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #eef2f7;
+            color: #333;
+            margin: 20px;
+        }
+        .container {
+            max-width: 700px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #4CAF50;
+            text-align: center;
+        }
+        label {
+            font-weight: bold;
+        }
+        select, input[type="number"], button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .totals-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #eaf6e9;
+            border: 1px solid #4CAF50;
+            border-radius: 10px;
+            font-size: 1.1em;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .rules-box {
+            padding: 15px;
+            margin-top: 20px;
+            background: #f1f8e9;
+            border: 1px solid #c8e6c9;
+            border-radius: 10px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Professional Service Token Calculator</h2>
+
+    <label for="service-select">Select Service:</label>
+    <select id="service-select" onchange="populateTasks()">
+        <option value="Deem Visitation">Deem Visitation</option>
+        <option value="Deem HR Attendance">Deem HR Attendance</option>
+        <option value="Crowd Analytics">Crowd Analytics</option>
+        <option value="Digital Twin">Digital Twin</option>
+    </select>
+
+    <label for="task-select">Select Task:</label>
+    <select id="task-select" onchange="calculateDuration()">
+        <!-- Options dynamically populated based on service selection -->
+    </select>
+
+    <label for="device-type">Select Device Type:</label>
+    <select id="device-type" onchange="calculateDuration()">
+        <option value="Camera">Camera</option>
+        <option value="Display">Display</option>
+        <option value="Sensor">Sensor</option>
+        <option value="Kiosk">Kiosk</option>
+    </select>
+
+    <label for="device-count">Device Count:</label>
+    <input type="number" id="device-count" min="1" placeholder="Enter device count" onchange="calculateDuration()">
+
+    <label for="task-duration">Calculated Duration (Hours):</label>
+    <input type="number" id="task-duration" readonly>
+
+    <button onclick="calculateProfessionalTokens()">Calculate Tokens</button>
+
+    <!-- Professional Service Token Results Table -->
+    <table id="professional-results-table">
+        <thead>
+            <tr>
+                <th>Service</th>
+                <th>Task</th>
+                <th>Device Type</th>
+                <th>Device Count</th>
+                <th>Duration (Hours)</th>
+                <th>Calculation (1.14 hours/token)</th>
+                <th>Total Tokens</th>
+                <th>Man-Days</th>
+            </tr>
+        </thead>
+        <tbody id="professional-results-body"></tbody>
+        <tfoot>
+            <tr>
+                <th colspan="6">Total Professional Service Tokens:</th>
+                <th id="total-professional-tokens">0</th>
+                <th id="total-professional-mandays">0</th>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="rules-box">
+        <strong>Business Rules:</strong><br>
+        - KS Installation: 0.5 days for 2 people<br>
+        - Vision Controller Installation: 0.5 days for 1 person<br>
+        - Cameras Onboarding: 1 hour for every 4 cameras<br>
+        - Cameras Alignment: 0.5 hours per camera<br>
+        - Sensor Integration: 2 hours for all devices<br>
+        - Custom Dashboard Development: 40 hours<br>
+        - 1 day (8 hours) = 7 tokens<br>
+        - Calculation Logic: 1 token = 1.14 hours<br>
+    </div>
+</div>
+
+<script>
+const tasks = {
+    "Deem Visitation": ["KS Installation", "Cameras Onboarding", "Cameras Alignment", "Smart Signage Installation"],
+    "Deem HR Attendance": ["Vision Controller Installation", "Cameras Onboarding", "Smart Signage Installation"],
+    "Crowd Analytics": ["Cameras Onboarding", "Cameras Alignment", "Sensor Integration", "Custom Dashboard Development"],
+    "Digital Twin": ["Digital Twin Setup", "Sensor Integration", "Custom Dashboard Development"]
+};
+
+const taskDurations = {
+    "KS Installation": 4,
+    "Vision Controller Installation": 4,
+    "Cameras Onboarding": 1,  // per 4 cameras
+    "Cameras Alignment": 0.5, // per camera
+    "Sensor Integration": 2,
+    "Smart Signage Installation": 4,
+    "Custom Dashboard Development": 40,
+    "Digital Twin Setup": 120,
+    "Captive Portal": 16
+};
+
+function populateTasks() {
+    const service = document.getElementById("service-select").value;
+    const taskSelect = document.getElementById("task-select");
+    taskSelect.innerHTML = "";
+    tasks[service].forEach(task => {
+        const option = document.createElement("option");
+        option.value = task;
+        option.textContent = task;
+        taskSelect.appendChild(option);
+    });
+}
+
+function calculateDuration() {
+    const task = document.getElementById("task-select").value;
+    const deviceCount = parseFloat(document.getElementById("device-count").value) || 1;
+
+    let duration;
+
+    if (task === "Cameras Onboarding") {
+        duration = (deviceCount / 4) * taskDurations[task];
+    } else if (task === "Cameras Alignment") {
+        duration = deviceCount * taskDurations[task];
+    } else {
+        duration = taskDurations[task] || 1;
+    }
+
+    document.getElementById("task-duration").value = duration.toFixed(2);
+}
+
+function calculateProfessionalTokens() {
+    const service = document.getElementById("service-select").value;
+    const task = document.getElementById("task-select").value;
+    const deviceType = document.getElementById("device-type").value;
+    const deviceCount = parseFloat(document.getElementById("device-count").value) || 1;
+    const duration = parseFloat(document.getElementById("task-duration").value);
+
+    const tokensPerHour = 1.14;
+    const totalTokens = (duration / tokensPerHour).toFixed(2);
+    const manDays = (totalTokens / 7).toFixed(2);
+
+    const row = `<tr><td>${service}</td><td>${task}</td><td>${deviceType}</td><td>${deviceCount}</td><td>${duration}</td><td>${duration} ÷ ${tokensPerHour} = ${totalTokens}</td><td>${totalTokens}</td><td>${manDays}</td></tr>`;
+    document.getElementById("professional-results-body").innerHTML += row;
+
+    updateTotals();
+}
+
+function updateTotals() {
+    const tokenCells = document.querySelectorAll("#professional-results-body td:nth-child(7)");
+    let totalTokens = 0;
+
+    tokenCells.forEach(cell => {
+        totalTokens += parseFloat(cell.textContent);
+    });
+
+    const totalManDays = (totalTokens / 7).toFixed(2);
+    document.getElementById("total-professional-tokens").textContent = totalTokens.toFixed(2);
+    document.getElementById("total-professional-mandays").textContent = totalManDays;
+}
+
+// Populate initial tasks on page load
+populateTasks();
+</script>
+
+</body>
+</html>
